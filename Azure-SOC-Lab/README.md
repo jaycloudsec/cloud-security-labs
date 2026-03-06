@@ -28,7 +28,7 @@ Logs collected by Log Analytics and monitored with Microsoft Sentinel.
 
 A dedicated resource group was created to contain all SOC lab resources.
 
-![Resource Groups](screenshots/resource-groups.png)
+![Resource Groups](Azure-SOC-Lab/resource-groups.png)
 
 ## Attack Simulations
 
