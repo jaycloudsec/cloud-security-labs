@@ -24,6 +24,12 @@ Windows VM (Target)
 
 Logs collected by Log Analytics and monitored with Microsoft Sentinel.
 
+## Lab Environment Setup
+
+A dedicated resource group was created to contain all SOC lab resources.
+
+![Resource Groups](screenshots/resource-groups.png)
+
 ## Attack Simulations
 
 1. Port scanning using Nmap
@@ -37,3 +43,5 @@ Security logs were ingested into Microsoft Sentinel where detection rules trigge
 ## Outcome
 
 This lab demonstrates the ability to deploy a cloud environment, simulate attacks, and monitor security events using a SIEM.
+
+
