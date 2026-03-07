@@ -344,5 +344,9 @@ This lab demonstrates the ability to:
 -   Simulate cyber attacks in a controlled environment
 -   Collect and analyze security logs using a SIEM platform
 
+<<<<<<< HEAD
 This project showcases practical SOC analyst skills including threat
 detection, log analysis, and cloud security monitoring.
+=======
+This project showcases practical SOC analyst skills including threat detection, log analysis, and cloud security monitoring.
+>>>>>>> 94a3c733954ac5905380cd6f14c13929904ba537
