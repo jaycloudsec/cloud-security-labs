@@ -499,3 +499,19 @@ Successful results from both **Heartbeat** and **SecurityEvent** queries
 confirm that the SOC monitoring environment is operational.
 
 ------------------------------------------------------------------------
+
+## Outcome
+
+This lab demonstrates the ability to:
+
+- Deploy cloud infrastructure in Microsoft Azure
+- Configure networking and remote access
+- Simulate cyber attacks in a controlled environment
+- Collect and analyze security logs using a SIEM platform
+- Configure Microsoft Sentinel for centralized security monitoring
+- Deploy and configure the Azure Monitor Agent (AMA)
+- Create and attach Data Collection Rules (DCR) for log ingestion
+- Troubleshoot log ingestion issues in a cloud SIEM environment
+- Verify telemetry flow using Log Analytics queries
+- Analyze Windows security event logs using Kusto Query Language (KQL)
+- Document real-world troubleshooting scenarios encountered during SOC environment setup
