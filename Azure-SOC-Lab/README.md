@@ -344,4 +344,158 @@ This lab demonstrates the ability to:
 -   Simulate cyber attacks in a controlled environment
 -   Collect and analyze security logs using a SIEM platform
 
+------------------------------------------------------------------------
 
+### ⚠️ Observation --- AzureMonitorWindowsAgent Not Found
+
+During the setup process, the expected monitoring extension
+**AzureMonitorWindowsAgent** could not be located in the Azure portal.
+
+Some documentation and tutorials reference this extension name when
+configuring Windows security log ingestion.
+
+However, while inspecting the available options in Microsoft Sentinel
+and Azure Monitor, it became clear that Microsoft has transitioned to
+the **Azure Monitor Agent (AMA)** architecture.
+
+Instead of installing an extension named **AzureMonitorWindowsAgent**,
+the correct configuration path was through the **Windows Security Events
+via AMA** connector inside Microsoft Sentinel.
+
+This connector automatically deploys the required monitoring components
+and configures the **Data Collection Rule (DCR)** used to collect
+Windows security logs.
+
+This caused initial confusion because the naming used in some
+documentation does not exactly match what appears in the Azure portal.
+
+Lesson learned:
+
+Microsoft frequently updates service names and architectures in Azure,
+which means documentation may reference older component names that have
+since been replaced by newer implementations.
+
+------------------------------------------------------------------------
+
+### ⚠️ Observation --- Data Sources Appeared Empty
+
+While reviewing the Data Collection Rule configuration, the **Data
+Sources** section initially appeared empty.
+
+This created the impression that Windows Event Logs were not configured
+for collection.
+
+Further investigation revealed that the Azure portal sometimes displays
+Data Collection Rule details in multiple locations, and navigating the
+wrong section can show incomplete configuration information.
+
+This caused confusion during troubleshooting because it appeared that
+the Data Collection Rule had no configured sources.
+
+After verifying the correct configuration path and running queries in
+Log Analytics, it was confirmed that telemetry was in fact being
+ingested correctly.
+
+------------------------------------------------------------------------
+
+# Final Log Verification
+
+After resolving the monitoring configuration issues, telemetry from the
+Windows virtual machine was successfully ingested into the Log Analytics
+Workspace.
+
+To verify that the monitoring pipeline was operational, queries were
+executed within Log Analytics.
+
+These queries confirmed that both the monitoring agent and Windows
+security events were successfully being collected.
+
+------------------------------------------------------------------------
+
+## Heartbeat Telemetry Verification
+
+The following query was executed in Log Analytics:
+
+    Heartbeat
+    | take 10
+
+The query returned multiple records from the target virtual machine,
+confirming that the **Azure Monitor Agent was active and communicating
+with the Log Analytics Workspace**.
+
+The Heartbeat table is generated automatically by the monitoring agent
+and is commonly used to verify that monitored systems are successfully
+sending telemetry.
+
+Screenshot:
+
+![Heartbeat Query Results](screenshots/heartbeat-query.png)
+
+------------------------------------------------------------------------
+
+## Windows Security Event Verification
+
+To confirm that Windows authentication and security events were being
+collected, the following query was executed:
+
+    SecurityEvent
+    | take 10
+
+The query returned Windows security events from the virtual machine.
+
+This confirmed that:
+
+• Windows Event Logs were successfully being collected\
+• The Data Collection Rule was functioning correctly\
+• Security telemetry was being ingested into Log Analytics\
+• Microsoft Sentinel had access to the collected logs
+
+Screenshot:
+
+![Security Event Query Results](screenshots/security-events-query.png)
+
+------------------------------------------------------------------------
+
+## Microsoft Sentinel Portal Observation
+
+While reviewing Microsoft Sentinel within the Azure portal, the
+following message appeared:
+
+    This page has been moved to the Defender portal for the optimal,
+    unified SecOps experience
+
+This message appears because Microsoft is gradually transitioning
+Microsoft Sentinel functionality into the **Microsoft Defender portal**.
+
+This behavior is normal and confirms that the Sentinel workspace is
+properly integrated with the broader Microsoft security ecosystem.
+
+Screenshot:
+
+![Sentinel Portal
+Message](screenshots/sentinel-defender-portal-message.png)
+
+------------------------------------------------------------------------
+
+## Verified Log Ingestion Pipeline
+
+At this stage of the lab, the full telemetry pipeline was confirmed to
+be functioning correctly.
+
+Security events generated on the Windows virtual machine flow through
+the following monitoring pipeline:
+
+Windows Virtual Machine\
+↓\
+Azure Monitor Agent (AMA)\
+↓\
+Data Collection Rule (DCR)\
+↓\
+Log Analytics Workspace\
+↓\
+Microsoft Sentinel
+
+Successful results from both **Heartbeat** and **SecurityEvent** queries
+confirm that the SOC monitoring environment is operational.
+
+------------------------------------------------------------------------
