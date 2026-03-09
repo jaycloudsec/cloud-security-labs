@@ -67,4 +67,70 @@ Analyzing these IP addresses allows analysts to determine potential attacker beh
 
 ## Screenshot
 
-![Att]()
+![Attacker IP Analysis](screenshots/attacker-ip-analysis.png)
+
+---
+
+# Brute Force Detection Rule
+
+A scheduled analytics rule was created in Microsoft Sentinel to automatically detect potential brute force attacks based on repeated failed authentication attempts.
+
+The rule monitors authentication failures and generates alerts when the number of attempts exceeds a defined threshold.
+
+## Screenshot
+
+![Brute Force Detection Rule Summary](screenshots/sentinel-bruteforce-rule-summary.png)
+
+---
+
+# Active Detection Rule
+
+Once configured, the detection rule continuously monitors incoming log data and triggers alerts when suspicious activity is identified.
+
+This allows security analysts to be notified of potential brute force attacks in near real time.
+
+## Screenshot
+
+![Active Detection Rule](screenshots/sentinel-active-detection-rule.png)
+
+---
+
+# SOC Workflow Demonstrated
+
+```
+Log Verification
+      ↓
+Threat Hunting
+      ↓
+Failed Login Analysis
+      ↓
+Attacker Investigation
+      ↓
+Detection Rule Creation
+      ↓
+Security Monitoring
+```
+
+---
+
+# Skills Demonstrated
+
+* Security Log Analysis
+* Threat Hunting using KQL
+* Detection Engineering
+* Brute Force Attack Identification
+* SOC Monitoring Workflow
+
+---
+
+# MITRE ATT&CK Mapping
+
+| Technique | Description                       |
+| --------- | --------------------------------- |
+| T1110     | Brute Force Authentication Attack |
+
+---
+
+# Cost Management
+
+To prevent unnecessary Azure charges, the virtual machine used during the lab was stopped after completing the testing phase. The environment can be restarted later from the Azure portal if additional testing is required.
