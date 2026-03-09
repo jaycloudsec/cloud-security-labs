@@ -10,7 +10,11 @@ This environment serves as the foundation for later labs involving attack simula
 
 ---
 
-# Lab Architecture
+## Lab Architecture
+
+### SIEM Log Ingestion Architecture
+
+![SIEM Architecture](screenshots/diagram.png)
 
 ```
 Internet (Attacker)
@@ -35,6 +39,7 @@ Microsoft Sentinel
 ```
 
 ---
+
 
 # Resource Group Setup
 
