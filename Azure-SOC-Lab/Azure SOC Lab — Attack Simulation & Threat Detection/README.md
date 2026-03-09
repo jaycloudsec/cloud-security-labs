@@ -50,15 +50,9 @@ A Windows Virtual Machine was deployed in Azure to generate security logs.
 * Connected VM diagnostics to Log Analytics Workspace
 * Enabled Microsoft Sentinel for the workspace
 
-### Purpose
-
-Provide a source of Windows security logs for SIEM ingestion.
-
 ### Screenshot
 
-```
-/screenshots/azure-vm-deployment.png
-```
+![Azure VM Deployment](screenshots/azure-vm-deployment.png)
 
 ---
 
@@ -73,15 +67,9 @@ SecurityEvent
 | take 10
 ```
 
-### Purpose
-
-Confirm that Windows Security Events are successfully being ingested into the SIEM.
-
 ### Screenshot
 
-```
-/screenshots/log-ingestion-verification.png
-```
+![Log Ingestion Verification](screenshots/log-ingestion-verification.png)
 
 ---
 
@@ -98,15 +86,9 @@ SecurityEvent
 | sort by AttemptCount desc
 ```
 
-### Explanation
-
-Event ID **4625** represents failed Windows login attempts. A high number of these events from a single IP address may indicate a brute-force attack.
-
 ### Screenshot
 
-```
-/screenshots/failed-login-query-results.png
-```
+![Failed Login Query Results](screenshots/failed-login-query-results.png)
 
 ---
 
@@ -128,15 +110,9 @@ SecurityEvent
 | sort by FailedAttempts desc
 ```
 
-### Purpose
-
-Identify the geographic origin of failed login attempts.
-
 ### Screenshot
 
-```
-/screenshots/sentinel-bruteforce-ip-analysis.png
-```
+![Attacker IP Analysis](screenshots/sentinel-bruteforce-ip-analysis.png)
 
 ---
 
@@ -162,21 +138,13 @@ SecurityEvent
 | Alert Threshold | Greater than 20 results |
 | Severity        | Medium                  |
 
-### MITRE ATT&CK Mapping
-
-Technique: **Brute Force (T1110)**
-
 ### Screenshot
 
-```
-/screenshots/sentinel-active-detection-rule.png
-```
+![Active Detection Rule](screenshots/sentinel-active-detection-rule.png)
 
 ---
 
 # Security Workflow Demonstrated
-
-This project demonstrates a full SOC detection workflow:
 
 ```
 Log Collection
@@ -205,8 +173,6 @@ Security Monitoring
 
 # Future Improvements
 
-Planned enhancements for the next phase of this project:
-
 * Sentinel Attack Map Dashboard
 * Incident Investigation Walkthrough
 * SOC Response Playbook
@@ -218,12 +184,4 @@ Planned enhancements for the next phase of this project:
 
 To avoid unnecessary cloud charges, the virtual machine was stopped after completing the lab.
 
-The environment can be resumed later by starting the VM from the Azure Portal.
-
-Alternatively, deleting the entire resource group will permanently remove all resources and stop billing.
-
----
-
-# Conclusion
-
-This lab demonstrates how Microsoft Sentinel can be used to detect brute-force authentication attacks using Windows security logs. By combining log ingestion, KQL analysis, and detection rules, security teams can identify suspicious login activity and respond quickly to potential threats.
+The environment can be resumed later by starting the VM from the Azure Portal or removed entirely by deleting the resource group.
