@@ -1,10 +1,12 @@
-# Azure SIEM Lab – Detecting Brute Force Attacks with Microsoft Sentinel
+# Azure SOC Lab — SIEM Deployment & Threat Detection
 
 ## Project Overview
 
-This project demonstrates how to deploy a cloud-based Security Information and Event Management (SIEM) solution using Microsoft Azure. The lab focuses on collecting Windows security logs, performing threat hunting using Kusto Query Language (KQL), and creating a detection rule to identify brute-force login attempts.
+This project demonstrates how to deploy and configure a cloud-based Security Information and Event Management (SIEM) environment using Microsoft Azure and Microsoft Sentinel.
 
-The detection logic identifies repeated failed authentication attempts mapped to the MITRE ATT&CK technique **Brute Force (T1110)**.
+The lab focuses on ingesting Windows security logs from a virtual machine, analyzing authentication failures, and creating detection rules to identify potential brute force attacks.
+
+The project simulates a basic SOC workflow including log ingestion, threat hunting, detection engineering, and investigation.
 
 ---
 
@@ -13,7 +15,8 @@ The detection logic identifies repeated failed authentication attempts mapped to
 * Microsoft Azure
 * Microsoft Sentinel
 * Azure Log Analytics
-* Microsoft Defender Portal
+* Azure Monitor Agent
+* Data Collection Rules (DCR)
 * Kusto Query Language (KQL)
 
 ---
@@ -30,37 +33,37 @@ Windows Security Logs
 Log Analytics Workspace
         │
         ▼
-Microsoft Sentinel
+Microsoft Sentinel (SIEM)
         │
         ▼
-Detection Rule & Security Monitoring
+Threat Detection & Investigation
 ```
 
 ---
 
-# Step 1 – Azure Environment Setup
+# Part 1 — SIEM Deployment & Log Ingestion
 
-A Windows Virtual Machine was deployed in Azure to generate security logs.
+## Azure Infrastructure Setup
 
-### Tasks Performed
+A Windows virtual machine was deployed in Azure to generate security logs for monitoring and analysis.
+
+### Tasks Completed
 
 * Created Azure Resource Group
 * Deployed Windows Virtual Machine
 * Configured networking and public IP
-* Connected VM diagnostics to Log Analytics Workspace
-* Enabled Microsoft Sentinel for the workspace
-
-### Screenshot
-
-![Azure VM Deployment](screenshots/azure-vm-deployment.png)
+* Created Log Analytics Workspace
+* Enabled Microsoft Sentinel
+* Installed Azure Monitor Agent
+* Configured Data Collection Rules (DCR)
 
 ---
 
-# Step 2 – Log Ingestion Verification
+## Log Ingestion Verification
 
-After connecting the VM to Log Analytics, logs were verified in Microsoft Sentinel.
+After configuring the Data Collection Rule, Windows security logs were successfully ingested into the Log Analytics workspace and became visible in Microsoft Sentinel.
 
-### Query Used
+### KQL Query
 
 ```kql
 SecurityEvent
@@ -73,11 +76,19 @@ SecurityEvent
 
 ---
 
-# Step 3 – Threat Hunting for Failed Logins
+# Part 2 — Attack Simulation & Threat Detection
 
-To identify suspicious activity, a query was executed to analyze Windows authentication failures.
+This phase focuses on analyzing authentication logs to detect suspicious behavior such as repeated failed login attempts.
 
-### Query
+---
+
+## Failed Login Analysis
+
+Windows Event ID **4625** represents failed authentication attempts.
+
+These logs were queried to identify patterns of repeated login failures that may indicate brute force activity.
+
+### KQL Query
 
 ```kql
 SecurityEvent
@@ -88,55 +99,39 @@ SecurityEvent
 
 ### Screenshot
 
-![Failed Login Query Results](screenshots/failed-login-query-results.png)
+![Failed Login Analysis](screenshots/failed-login-analysis.png)
 
 ---
 
-# Step 4 – Attacker IP Analysis
+## Attacker IP Analysis
 
-To further analyze potential attackers, the IP addresses were enriched with geolocation data.
+The suspicious IP addresses responsible for repeated login failures were analyzed further to determine geographic origin.
 
-### Query
-
-```kql
-SecurityEvent
-| where EventID == 4625
-| summarize FailedAttempts = count() by IpAddress
-| extend Location = geo_info_from_ip_address(IpAddress)
-| extend Country = tostring(Location.country),
-         Latitude = todouble(Location.latitude),
-         Longitude = todouble(Location.longitude)
-| project IpAddress, FailedAttempts, Country, Latitude, Longitude
-| sort by FailedAttempts desc
-```
+This step helps identify potential malicious actors targeting the system.
 
 ### Screenshot
 
-![Attacker IP Analysis](screenshots/sentinel-bruteforce-ip-analysis.png)
+![Attacker IP Analysis](screenshots/attacker-ip-analysis.png)
 
 ---
 
-# Step 5 – Detection Rule Creation
+## Brute Force Detection Rule
 
-A scheduled analytics rule was created in Microsoft Sentinel to detect brute-force activity.
+A scheduled analytics rule was created in Microsoft Sentinel to automatically detect brute force behavior based on repeated failed logins.
 
-### Detection Query
+### Detection Logic
 
-```kql
-SecurityEvent
-| where EventID == 4625
-| summarize AttemptCount = count() by IpAddress
-| sort by AttemptCount desc
-```
+The rule monitors authentication failures and triggers alerts when the number of failed attempts exceeds a defined threshold.
 
-### Detection Configuration
+### Screenshot
 
-| Setting         | Value                   |
-| --------------- | ----------------------- |
-| Query Frequency | 5 Minutes               |
-| Lookup Period   | 5 Minutes               |
-| Alert Threshold | Greater than 20 results |
-| Severity        | Medium                  |
+![Brute Force Detection Rule Summary](screenshots/sentinel-bruteforce-rule-summary.png)
+
+---
+
+## Active Detection Rule
+
+Once configured, the rule continuously monitors incoming log data and generates alerts when suspicious activity is detected.
 
 ### Screenshot
 
@@ -144,16 +139,16 @@ SecurityEvent
 
 ---
 
-# Security Workflow Demonstrated
+# SOC Workflow Demonstrated
 
 ```
 Log Collection
       ↓
+Log Ingestion
+      ↓
 Threat Hunting
       ↓
-Attacker Analysis
-      ↓
-Detection Engineering
+Detection Rule Creation
       ↓
 Security Monitoring
 ```
@@ -164,24 +159,34 @@ Security Monitoring
 
 * Cloud Security Monitoring
 * SIEM Deployment
-* Threat Hunting with KQL
-* Detection Engineering
 * Security Log Analysis
-* MITRE ATT&CK Mapping
+* KQL Threat Hunting
+* Detection Engineering
+* Basic SOC Investigation Workflow
 
 ---
 
-# Future Improvements
+# MITRE ATT&CK Mapping
 
-* Sentinel Attack Map Dashboard
-* Incident Investigation Walkthrough
-* SOC Response Playbook
-* Automated Response Rules
+| Technique | Description                       |
+| --------- | --------------------------------- |
+| T1110     | Brute Force Authentication Attack |
 
 ---
 
 # Cost Management
 
-To avoid unnecessary cloud charges, the virtual machine was stopped after completing the lab.
+To prevent unnecessary Azure charges, the virtual machine was stopped after completing the lab.
 
-The environment can be resumed later by starting the VM from the Azure Portal or removed entirely by deleting the resource group.
+The environment can be restarted later from the Azure portal if further testing is required.
+
+---
+
+# Future Improvements
+
+Possible enhancements for this project include:
+
+* Attack Map Dashboard
+* Automated Response Playbooks
+* Incident Investigation Walkthrough
+* SOC Response Documentation
