@@ -1,197 +1,229 @@
-# Azure SOC Lab — Attack Simulation & Threat Detection
+# Azure SIEM Lab – Detecting Brute Force Attacks with Microsoft Sentinel
 
-## Overview
+## Project Overview
 
-This project continues from the **Azure SOC Lab — SIEM Deployment & Log Ingestion** environment.
-The goal of this phase is to simulate attacker behavior and detect malicious activity using Microsoft Sentinel.
+This project demonstrates how to deploy a cloud-based Security Information and Event Management (SIEM) solution using Microsoft Azure. The lab focuses on collecting Windows security logs, performing threat hunting using Kusto Query Language (KQL), and creating a detection rule to identify brute-force login attempts.
 
-The lab focuses on generating realistic security events and analyzing them using **Kusto Query Language (KQL)** within the Log Analytics Workspace.
-
-This simulates a basic **Security Operations Center (SOC)** workflow including attack simulation, log analysis, detection, and investigation.
+The detection logic identifies repeated failed authentication attempts mapped to the MITRE ATT&CK technique **Brute Force (T1110)**.
 
 ---
 
-# Lab Architecture
+# Technologies Used
 
-Attack activity is generated against the monitored Azure virtual machine and ingested into Microsoft Sentinel.
+* Microsoft Azure
+* Microsoft Sentinel
+* Azure Log Analytics
+* Microsoft Defender Portal
+* Kusto Query Language (KQL)
 
-Internet (Attacker Machine)
-↓
-Azure Virtual Network
-↓
-Windows Virtual Machine (Target)
-↓
-Azure Monitor Agent (AMA)
-↓
-Data Collection Rule (DCR)
-↓
+---
+
+# Architecture
+
+```
+Azure Virtual Machine
+        │
+        ▼
+Windows Security Logs
+        │
+        ▼
 Log Analytics Workspace
-↓
-Microsoft Sentinel (SIEM)
-
----
-
-# Attack Simulation
-
-Several attack scenarios are performed against the Azure virtual machine to generate detectable security telemetry.
-
-These activities are conducted in a controlled lab environment for educational purposes.
-
-Simulated attack techniques:
-
-* Network reconnaissance using Nmap
-* Multiple failed authentication attempts
-* Remote Desktop brute force attempts
-
-These actions generate Windows Security Events that are collected by the **Azure Monitor Agent** and forwarded to the **Log Analytics Workspace**.
-
----
-
-# Attack Scenario 1 — Port Scanning
-
-Attackers commonly begin with reconnaissance to discover open services.
-
-In this lab, a port scan is performed against the public IP address of the Azure virtual machine.
-
-Example command:
-
-```bash
-nmap -sS <target-vm-public-ip>
+        │
+        ▼
+Microsoft Sentinel
+        │
+        ▼
+Detection Rule & Security Monitoring
 ```
 
-This scan attempts to identify open ports and services exposed to the internet.
+---
 
-Port scanning activity can provide early indicators of attacker reconnaissance behavior.
+# Step 1 – Azure Environment Setup
+
+A Windows Virtual Machine was deployed in Azure to generate security logs.
+
+### Tasks Performed
+
+* Created Azure Resource Group
+* Deployed Windows Virtual Machine
+* Configured networking and public IP
+* Connected VM diagnostics to Log Analytics Workspace
+* Enabled Microsoft Sentinel for the workspace
+
+### Purpose
+
+Provide a source of Windows security logs for SIEM ingestion.
+
+### Screenshot
+
+```
+/screenshots/azure-vm-deployment.png
+```
 
 ---
 
-# Attack Scenario 2 — Failed Login Attempts
+# Step 2 – Log Ingestion Verification
 
-Multiple failed login attempts are generated to simulate an attacker attempting to guess credentials.
+After connecting the VM to Log Analytics, logs were verified in Microsoft Sentinel.
 
-Windows records these attempts as **Event ID 4625** in the Security log.
+### Query Used
 
-These logs are forwarded to Azure Log Analytics where they can be analyzed using KQL queries.
+```kql
+SecurityEvent
+| take 10
+```
+
+### Purpose
+
+Confirm that Windows Security Events are successfully being ingested into the SIEM.
+
+### Screenshot
+
+```
+/screenshots/log-ingestion-verification.png
+```
 
 ---
 
-# Attack Scenario 3 — RDP Brute Force Simulation
+# Step 3 – Threat Hunting for Failed Logins
 
-Repeated authentication attempts are performed against the Remote Desktop service.
+To identify suspicious activity, a query was executed to analyze Windows authentication failures.
 
-This produces multiple **Event ID 4625** entries in the Windows Security logs.
-
-High volumes of these events often indicate brute force attempts against exposed RDP services.
-
----
-
-# Log Analysis Using KQL
-
-After attack simulation, security events can be queried in the Log Analytics Workspace.
-
-Example query to identify failed login attempts:
+### Query
 
 ```kql
 SecurityEvent
 | where EventID == 4625
-| summarize FailedAttempts = count() by Account, IpAddress
+| summarize AttemptCount = count() by IpAddress
+| sort by AttemptCount desc
+```
+
+### Explanation
+
+Event ID **4625** represents failed Windows login attempts. A high number of these events from a single IP address may indicate a brute-force attack.
+
+### Screenshot
+
+```
+/screenshots/failed-login-query-results.png
+```
+
+---
+
+# Step 4 – Attacker IP Analysis
+
+To further analyze potential attackers, the IP addresses were enriched with geolocation data.
+
+### Query
+
+```kql
+SecurityEvent
+| where EventID == 4625
+| summarize FailedAttempts = count() by IpAddress
+| extend Location = geo_info_from_ip_address(IpAddress)
+| extend Country = tostring(Location.country),
+         Latitude = todouble(Location.latitude),
+         Longitude = todouble(Location.longitude)
+| project IpAddress, FailedAttempts, Country, Latitude, Longitude
 | sort by FailedAttempts desc
 ```
 
-This query helps identify accounts receiving the highest number of failed authentication attempts.
+### Purpose
+
+Identify the geographic origin of failed login attempts.
+
+### Screenshot
+
+```
+/screenshots/sentinel-bruteforce-ip-analysis.png
+```
 
 ---
 
-# Threat Hunting
+# Step 5 – Detection Rule Creation
 
-Threat hunting queries can be used to proactively search for suspicious activity.
+A scheduled analytics rule was created in Microsoft Sentinel to detect brute-force activity.
 
-Example hunting query:
+### Detection Query
 
 ```kql
 SecurityEvent
 | where EventID == 4625
-| where TimeGenerated > ago(1h)
+| summarize AttemptCount = count() by IpAddress
+| sort by AttemptCount desc
 ```
 
-This query identifies failed login attempts within the last hour.
+### Detection Configuration
 
-Threat hunters often use similar queries to detect suspicious patterns before automated alerts are triggered.
+| Setting         | Value                   |
+| --------------- | ----------------------- |
+| Query Frequency | 5 Minutes               |
+| Lookup Period   | 5 Minutes               |
+| Alert Threshold | Greater than 20 results |
+| Severity        | Medium                  |
 
----
+### MITRE ATT&CK Mapping
 
-# Sentinel Detection Rule
+Technique: **Brute Force (T1110)**
 
-Microsoft Sentinel analytic rules can be configured to automatically detect suspicious login activity.
+### Screenshot
 
-Example detection logic:
-
-Trigger an alert when a large number of **Event ID 4625** entries occur within a short time window.
-
-Detection indicators may include:
-
-* Multiple failed logins
-* Same target account
-* Repeated attempts from the same IP address
-
-When these conditions are met, **Microsoft Sentinel generates an incident** for investigation.
+```
+/screenshots/sentinel-active-detection-rule.png
+```
 
 ---
 
-# Incident Investigation
+# Security Workflow Demonstrated
 
-When an alert is triggered, Microsoft Sentinel creates a security incident containing relevant log data.
+This project demonstrates a full SOC detection workflow:
 
-SOC analysts investigate the incident by reviewing:
-
-* Source IP address
-* Target user account
-* Authentication attempt count
-* Event timestamps
-
-This process helps determine whether the activity represents a legitimate user error or a malicious attack.
+```
+Log Collection
+      ↓
+Threat Hunting
+      ↓
+Attacker Analysis
+      ↓
+Detection Engineering
+      ↓
+Security Monitoring
+```
 
 ---
 
 # Skills Demonstrated
 
-Cloud Security
-
-* Monitoring Azure infrastructure using Microsoft Sentinel
-* Analyzing security telemetry using Log Analytics
-
-Security Operations
-
-* Simulating attacker behavior in a controlled environment
-* Developing SIEM detection logic
-* Threat hunting using Kusto Query Language
-
-Incident Response
-
-* Investigating authentication attack patterns
-* Identifying brute force attempts
-
----
-
-# Outcome
-
-This lab demonstrates the ability to:
-
-* Simulate attacker activity against a monitored system
-* Analyze Windows security logs in a cloud SIEM
-* Detect brute force authentication attempts
-* Use KQL queries for threat hunting
-* Investigate security incidents within Microsoft Sentinel
+* Cloud Security Monitoring
+* SIEM Deployment
+* Threat Hunting with KQL
+* Detection Engineering
+* Security Log Analysis
+* MITRE ATT&CK Mapping
 
 ---
 
 # Future Improvements
 
-Possible enhancements to extend this lab include:
+Planned enhancements for the next phase of this project:
 
-* Global attacker map visualization
-* GeoIP enrichment of attacker IP addresses
-* Automated response playbooks using Azure Logic Apps
-* Additional threat hunting queries
+* Sentinel Attack Map Dashboard
+* Incident Investigation Walkthrough
+* SOC Response Playbook
+* Automated Response Rules
 
-These improvements would further simulate real-world SOC detection and response workflows.
+---
+
+# Cost Management
+
+To avoid unnecessary cloud charges, the virtual machine was stopped after completing the lab.
+
+The environment can be resumed later by starting the VM from the Azure Portal.
+
+Alternatively, deleting the entire resource group will permanently remove all resources and stop billing.
+
+---
+
+# Conclusion
+
+This lab demonstrates how Microsoft Sentinel can be used to detect brute-force authentication attacks using Windows security logs. By combining log ingestion, KQL analysis, and detection rules, security teams can identify suspicious login activity and respond quickly to potential threats.
