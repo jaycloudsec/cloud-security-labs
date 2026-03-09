@@ -1,246 +1,197 @@
-# Azure SOC Lab — SIEM Deployment & Log Ingestion
+# Azure SOC Lab — Attack Simulation & Threat Detection
 
 ## Overview
 
-This lab documents the deployment of a basic Security Information and Event Management (SIEM) environment in Microsoft Azure using Microsoft Sentinel.
+This project continues from the **Azure SOC Lab — SIEM Deployment & Log Ingestion** environment.
+The goal of this phase is to simulate attacker behavior and detect malicious activity using Microsoft Sentinel.
 
-The objective of this project is to build a cloud-based monitoring environment capable of collecting and analyzing security logs from a Windows virtual machine.
+The lab focuses on generating realistic security events and analyzing them using **Kusto Query Language (KQL)** within the Log Analytics Workspace.
 
-This environment serves as the foundation for later labs involving attack simulation, threat detection, and SOC investigation workflows.
+This simulates a basic **Security Operations Center (SOC)** workflow including attack simulation, log analysis, detection, and investigation.
 
 ---
 
 # Lab Architecture
 
-```
-Internet (Attacker)
-      │
-      ▼
+Attack activity is generated against the monitored Azure virtual machine and ingested into Microsoft Sentinel.
+
+Internet (Attacker Machine)
+↓
 Azure Virtual Network
-      │
-      ▼
-Windows Virtual Machine
-      │
-      ▼
+↓
+Windows Virtual Machine (Target)
+↓
 Azure Monitor Agent (AMA)
-      │
-      ▼
+↓
 Data Collection Rule (DCR)
-      │
-      ▼
+↓
 Log Analytics Workspace
-      │
-      ▼
-Microsoft Sentinel
+↓
+Microsoft Sentinel (SIEM)
+
+---
+
+# Attack Simulation
+
+Several attack scenarios are performed against the Azure virtual machine to generate detectable security telemetry.
+
+These activities are conducted in a controlled lab environment for educational purposes.
+
+Simulated attack techniques:
+
+* Network reconnaissance using Nmap
+* Multiple failed authentication attempts
+* Remote Desktop brute force attempts
+
+These actions generate Windows Security Events that are collected by the **Azure Monitor Agent** and forwarded to the **Log Analytics Workspace**.
+
+---
+
+# Attack Scenario 1 — Port Scanning
+
+Attackers commonly begin with reconnaissance to discover open services.
+
+In this lab, a port scan is performed against the public IP address of the Azure virtual machine.
+
+Example command:
+
+```bash
+nmap -sS <target-vm-public-ip>
 ```
 
----
+This scan attempts to identify open ports and services exposed to the internet.
 
-# Resource Group Setup
-
-A dedicated resource group was created to contain all SOC lab resources.
-
-![Resource Groups](screenshots/resource-groups.png)
-
-### Observation: Multiple Resource Groups
-
-Two resource groups appear in the Azure portal.
-
-**soc-lab-rg**  
-This is the resource group manually created to hold the lab resources.
-
-**NetworkWatcherRG**  
-This resource group is automatically created by Azure to support network monitoring and diagnostics.
-
-This behavior is normal and expected.
+Port scanning activity can provide early indicators of attacker reconnaissance behavior.
 
 ---
 
-# Windows Target Virtual Machine
+# Attack Scenario 2 — Failed Login Attempts
 
-A Windows 10 virtual machine was deployed to simulate a monitored endpoint.
+Multiple failed login attempts are generated to simulate an attacker attempting to guess credentials.
 
-Configuration:
+Windows records these attempts as **Event ID 4625** in the Security log.
 
-VM Name: `soc-target-vm`  
-Operating System: Windows 10 Enterprise 22H2  
-Region: Australia East  
-VM Size: Standard_B2ts_v2  
-Access Method: Remote Desktop (RDP)
-
-![Virtual Machine Deployment](screenshots/virtual-machine.png)
+These logs are forwarded to Azure Log Analytics where they can be analyzed using KQL queries.
 
 ---
 
-# Virtual Machine Networking
+# Attack Scenario 3 — RDP Brute Force Simulation
 
-The virtual machine was connected to an Azure Virtual Network and assigned a public IP address.
+Repeated authentication attempts are performed against the Remote Desktop service.
 
-A Network Security Group rule allowing **RDP on port 3389** was configured.
+This produces multiple **Event ID 4625** entries in the Windows Security logs.
 
-This allows the VM to be accessed remotely and generate authentication events for monitoring.
-
-![VM Networking](screenshots/vm-networking.png)
+High volumes of these events often indicate brute force attempts against exposed RDP services.
 
 ---
 
-# Log Analytics Workspace
+# Log Analysis Using KQL
 
-A Log Analytics Workspace was deployed to store telemetry and security logs.
+After attack simulation, security events can be queried in the Log Analytics Workspace.
 
-Configuration:
-
-Workspace Name: `soc-law`  
-Resource Group: `soc-lab-rg`  
-Region: Australia East
-
-Logs collected include:
-
-- Windows authentication events
-- Failed login attempts
-- System security events
-
-![Log Analytics Workspace](screenshots/log-analytics.png)
-
----
-
-# Microsoft Sentinel Deployment
-
-Microsoft Sentinel was enabled on the Log Analytics Workspace to provide SIEM capabilities.
-
-Sentinel allows security logs to be analyzed, queried, and monitored for suspicious behavior.
-
-The Microsoft Sentinel **free trial** was activated for this lab environment.
-
-![Microsoft Sentinel Overview](screenshots/sentinel-overview.png)
-
----
-
-# Windows Security Events Connector
-
-The **Windows Security Events via AMA** connector was installed from the Microsoft Sentinel Content Hub.
-
-This connector allows collection of:
-
-- Successful logins
-- Failed login attempts
-- Account lockouts
-- Security auditing events
-
-Logs are forwarded to the Log Analytics Workspace for analysis.
-
----
-
-# Connecting Windows Security Events (AMA)
-
-Steps performed:
-
-1. Open **Microsoft Sentinel**
-2. Navigate to **Content Hub**
-3. Install **Windows Security Events via AMA**
-4. Create a **Data Collection Rule**
-5. Select the VM `soc-target-vm`
-6. Enable **All Security Events**
-
----
-
-# Log Ingestion Pipeline
-
-Security logs follow this telemetry path:
-
-```
-Windows Virtual Machine
-        │
-        ▼
-Azure Monitor Agent
-        │
-        ▼
-Data Collection Rule
-        │
-        ▼
-Log Analytics Workspace
-        │
-        ▼
-Microsoft Sentinel
-```
-
----
-
-# Log Verification
-
-Telemetry ingestion was verified using KQL queries.
-
-### Heartbeat Query
-
-```kql
-Heartbeat
-| take 10
-```
-
-This confirmed the Azure Monitor Agent was actively communicating with Log Analytics.
-
-![Heartbeat Query Results](screenshots/heartbeat-query.png)
-
----
-
-### Security Event Query
+Example query to identify failed login attempts:
 
 ```kql
 SecurityEvent
-| take 10
+| where EventID == 4625
+| summarize FailedAttempts = count() by Account, IpAddress
+| sort by FailedAttempts desc
 ```
 
-This confirmed Windows security events were successfully being collected.
-
-![Security Event Query Results](screenshots/security-events-query.png)
+This query helps identify accounts receiving the highest number of failed authentication attempts.
 
 ---
 
-# Sentinel Portal Observation
+# Threat Hunting
 
-While reviewing Sentinel, the portal displayed the following message:
+Threat hunting queries can be used to proactively search for suspicious activity.
 
+Example hunting query:
+
+```kql
+SecurityEvent
+| where EventID == 4625
+| where TimeGenerated > ago(1h)
 ```
-This page has been moved to the Defender portal for the optimal unified SecOps experience
-```
 
-This is expected as Microsoft is transitioning Sentinel features to the Defender portal.
+This query identifies failed login attempts within the last hour.
 
-![Sentinel Portal Message](screenshots/sentinel-defender-portal-message.png)
+Threat hunters often use similar queries to detect suspicious patterns before automated alerts are triggered.
 
 ---
 
-# Troubleshooting & Key Observations
+# Sentinel Detection Rule
 
-During setup several issues were encountered:
+Microsoft Sentinel analytic rules can be configured to automatically detect suspicious login activity.
 
-• The virtual machine was stopped during setup, preventing the Azure Monitor Agent from installing.  
-• Initial queries returned no results because the Data Collection Rule had no configured data sources.  
-• Azure portal limitations prevented editing certain DCR settings directly.
+Example detection logic:
 
-These issues were resolved by restarting the VM and verifying the Data Collection Rule configuration.
+Trigger an alert when a large number of **Event ID 4625** entries occur within a short time window.
+
+Detection indicators may include:
+
+* Multiple failed logins
+* Same target account
+* Repeated attempts from the same IP address
+
+When these conditions are met, **Microsoft Sentinel generates an incident** for investigation.
+
+---
+
+# Incident Investigation
+
+When an alert is triggered, Microsoft Sentinel creates a security incident containing relevant log data.
+
+SOC analysts investigate the incident by reviewing:
+
+* Source IP address
+* Target user account
+* Authentication attempt count
+* Event timestamps
+
+This process helps determine whether the activity represents a legitimate user error or a malicious attack.
+
+---
+
+# Skills Demonstrated
+
+Cloud Security
+
+* Monitoring Azure infrastructure using Microsoft Sentinel
+* Analyzing security telemetry using Log Analytics
+
+Security Operations
+
+* Simulating attacker behavior in a controlled environment
+* Developing SIEM detection logic
+* Threat hunting using Kusto Query Language
+
+Incident Response
+
+* Investigating authentication attack patterns
+* Identifying brute force attempts
 
 ---
 
 # Outcome
 
-This lab successfully demonstrates:
+This lab demonstrates the ability to:
 
-- Deployment of a cloud SIEM environment
-- Log ingestion using Azure Monitor Agent
-- Data Collection Rule configuration
-- Security log analysis using KQL
-- Troubleshooting SIEM telemetry pipelines
-
-The monitoring environment is now operational and ready for the next phase of the SOC lab.
+* Simulate attacker activity against a monitored system
+* Analyze Windows security logs in a cloud SIEM
+* Detect brute force authentication attempts
+* Use KQL queries for threat hunting
+* Investigate security incidents within Microsoft Sentinel
 
 ---
 
-# Next Phase
+# Future Improvements
 
-The next lab will focus on:
+Possible enhancements to extend this lab include:
 
-- Attack simulation
-- Threat detection using KQL
-- RDP brute force monitoring
-- SOC investigation workflows
+* Global attacker map visualization
+* GeoIP enrichment of attacker IP addresses
+* Automated response playbooks using Azure Logic Apps
+* Additional threat hunting queries
+
+These improvements would further simulate real-world SOC detection and response workflows.
