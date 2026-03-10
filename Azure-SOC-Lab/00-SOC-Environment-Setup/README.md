@@ -1,4 +1,4 @@
-# Cloud Security Labs
+#  Azure SOC Lab
 
 This repository contains hands-on cloud security projects focused on
 SIEM deployment, threat detection, and SOC operations.
