@@ -2,7 +2,7 @@
 
 ## Overview
 
-This repository contains a **hands-on Security Operations Center (SOC) lab environment built in Microsoft Azure**.
+This repository contains a **hands-on Security Operations Center (SOC) lab environment built in Microsoft Azure**.  
 The goal of this project is to simulate real-world blue team workflows including **SIEM deployment, log ingestion, threat detection, incident investigation, and automated response**.
 
 The environment uses **Microsoft Sentinel as the SIEM platform**, with logs collected from Azure virtual machines and other security data sources.
@@ -130,8 +130,6 @@ Focus areas:
 * GitHub Documentation
 
 ---
-## Quick Walkthrough Guide
----
 
 ## Quick Walkthrough Guide
 
@@ -250,5 +248,5 @@ SecurityEvent
 
 ## Disclaimer
 
-This lab environment is intended for **educational and defensive security purposes only**.
+This lab environment is intended for **educational and defensive security purposes only**.  
 All attack simulations are performed within a controlled lab environment.
