@@ -61,7 +61,7 @@ Azure Portal
 
 Create a new **Scheduled Query Rule**.
 
-![Create Analytics Rule](images/analytics-rule-creation.png)
+![Create Analytics Rule](screenshots/analytics-rule-creation.png)
 
 ---
 
@@ -75,7 +75,7 @@ Create → Scheduled Query Rule
 
 This allows custom detections using KQL queries.
 
-![Analytics Rule Configuration](images/analytics-rule-configuration.png)
+![Analytics Rule Configuration](screenshots/analytics-rule-configuration.png)
 
 ---
 
@@ -101,7 +101,7 @@ Medium
 Credential Access
 ```
 
-![Analytics Rule Details](images/analytics-rule-details.png)
+![Analytics Rule Details](screenshots/analytics-rule-details.png)
 
 ---
 
@@ -125,7 +125,7 @@ Lookup data from last: 5 minutes
 Alert threshold: results greater than 0
 ```
 
-![Analytics Rule Logic](images/analytics-rule-logic.png)
+![Analytics Rule Logic](screenshots/analytics-rule-logic.png)
 
 ---
 
@@ -140,7 +140,7 @@ Create incidents from alerts triggered by this rule: Enabled
 Alert grouping: Disabled
 ```
 
-![Incident Settings](images/incident-settings.png)
+![Incident Settings](screenshots/incident-settings.png)
 
 ---
 
@@ -150,7 +150,7 @@ Automation playbooks were **not configured in this lab**.
 
 Playbooks will be implemented in the **Automated SOC Response Lab**.
 
-![Automated Response](images/automated-response.png)
+![Automated Response](screenshots/automated-response.png)
 
 ---
 
@@ -160,7 +160,7 @@ Review the configuration and create the analytics rule.
 
 Once created, the rule begins running according to its configured schedule.
 
-![Analytics Rule Review](images/analytics-rule-review.png)
+![Analytics Rule Review](screenshots/analytics-rule-review.png)
 
 ---
 
@@ -188,7 +188,7 @@ net use \\127.0.0.1\IPC$ /user:administrator wrongpassword
 
 This generates Windows **Event ID 4625 failed login events**.
 
-![Failed Login Simulation](images/failed-login-simulation.png)
+![Failed Login Simulation](screenshots/failed-login-simulation.png)
 
 ---
 
