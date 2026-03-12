@@ -5,29 +5,29 @@
 This lab focuses on **Detection Engineering using Microsoft Sentinel**.
 The goal is to create a **custom analytics rule** that detects suspicious authentication behavior using Windows security logs collected from a monitored virtual machine.
 
-In this scenario, a rule was created to detect **multiple failed login attempts**, which is a common indicator of **brute-force authentication attacks**.
+In this scenario, a rule was created to detect **multiple failed login attempts**, which is a common indicator of **brute-force authentication attempts**.
 
-The lab demonstrates how security analysts:
+This lab demonstrates how SOC analysts:
 
 * Write detection logic using **KQL (Kusto Query Language)**
 * Create **Scheduled Analytics Rules**
-* Simulate attacker behavior
+* Simulate attacker activity
 * Validate security telemetry inside the SIEM
 
 ---
 
-## Technologies Used
+# Technologies Used
 
 * Microsoft Azure
 * Microsoft Sentinel
 * Log Analytics Workspace
 * Windows Virtual Machine
 * Azure Monitor Agent
-* Kusto Query Language (KQL)
+* KQL (Kusto Query Language)
 
 ---
 
-## Detection Scenario
+# Detection Scenario
 
 Brute-force attacks attempt to guess credentials by repeatedly submitting incorrect login attempts.
 
@@ -35,7 +35,7 @@ Windows systems generate **Event ID 4625** whenever an authentication attempt fa
 
 By analyzing these events in Microsoft Sentinel, a detection rule can identify patterns indicating a possible brute-force attempt.
 
-Detection logic used in this lab:
+Detection query used in this lab:
 
 ```kql
 SecurityEvent
@@ -45,13 +45,11 @@ SecurityEvent
 | sort by FailedAttempts desc
 ```
 
-This query counts failed login attempts grouped by **Account** and **IP address** and triggers when attempts exceed the defined threshold.
-
 ---
 
-## Lab Walkthrough
+# Lab Walkthrough
 
-### Step 1 — Open Analytics Rules
+## Step 1 — Open Analytics Rules
 
 Navigate to:
 
@@ -61,37 +59,29 @@ Azure Portal
 → Analytics
 ```
 
-This section is where detection rules are created and managed.
+Create a new **Scheduled Query Rule**.
 
-Screenshot:
-
-```
-analytics-rule-creation.png
-```
+![Create Analytics Rule](images/analytics-rule-creation.png)
 
 ---
 
-### Step 2 — Create a Scheduled Query Rule
+## Step 2 — Configure Rule Settings
 
-Create a new rule:
+Select:
 
 ```
 Create → Scheduled Query Rule
 ```
 
-This rule type allows custom detection logic using KQL queries.
+This allows custom detections using KQL queries.
 
-Screenshot:
-
-```
-analytics-rule-configuration.png
-```
+![Analytics Rule Configuration](images/analytics-rule-configuration.png)
 
 ---
 
-### Step 3 — Configure Rule Details
+## Step 3 — Configure Rule Details
 
-The rule was configured with the following settings:
+Example configuration used:
 
 **Rule Name**
 
@@ -111,17 +101,13 @@ Medium
 Credential Access
 ```
 
-Screenshot:
-
-```
-analytics-rule-details.png
-```
+![Analytics Rule Details](images/analytics-rule-details.png)
 
 ---
 
-### Step 4 — Define Detection Logic
+## Step 4 — Define Detection Logic
 
-Detection logic was written using KQL to identify multiple failed login attempts.
+Detection logic identifies accounts with multiple failed authentication attempts.
 
 ```kql
 SecurityEvent
@@ -131,79 +117,63 @@ SecurityEvent
 | sort by FailedAttempts desc
 ```
 
-Rule configuration:
+Rule execution configuration:
 
 ```
 Run query every: 5 minutes
-Lookup data from the last: 5 minutes
+Lookup data from last: 5 minutes
 Alert threshold: results greater than 0
 ```
 
-Screenshot:
-
-```
-analytics-rule-logic.png
-```
+![Analytics Rule Logic](images/analytics-rule-logic.png)
 
 ---
 
-### Step 5 — Configure Incident Settings
+## Step 5 — Configure Incident Settings
 
-The rule was configured to automatically generate incidents when alerts are triggered.
+Enable incident creation when alerts are generated.
 
-Settings:
+Configuration:
 
 ```
-Create incidents from alerts triggered by this analytics rule: Enabled
+Create incidents from alerts triggered by this rule: Enabled
 Alert grouping: Disabled
 ```
 
-Screenshot:
-
-```
-incident-settings.png
-```
+![Incident Settings](images/incident-settings.png)
 
 ---
 
-### Step 6 — Automated Response
+## Step 6 — Automated Response
 
-Automation playbooks were not configured during this lab.
+Automation playbooks were **not configured in this lab**.
 
-Playbooks are covered later in the **Automated SOC Response Lab**.
+Playbooks will be implemented in the **Automated SOC Response Lab**.
 
-Screenshot:
-
-```
-automated-response.png
-```
+![Automated Response](images/automated-response.png)
 
 ---
 
-### Step 7 — Review and Create Rule
+## Step 7 — Review and Create Rule
 
-The rule configuration was reviewed and deployed.
+Review the configuration and create the analytics rule.
 
-Once created, the rule becomes active in Microsoft Sentinel and begins running according to its configured schedule.
+Once created, the rule begins running according to its configured schedule.
 
-Screenshot:
-
-```
-analytics-rule-review.png
-```
+![Analytics Rule Review](images/analytics-rule-review.png)
 
 ---
 
-### Step 8 — Simulate Failed Login Attempts
+## Step 8 — Simulate Failed Login Attempts
 
-Failed authentication attempts were simulated on the monitored virtual machine.
+Since RDP and SSH access were not used in this lab, failed authentication attempts were simulated using **Run Command inside the Azure VM**.
 
 Location:
 
 ```
 Azure Portal
 → Virtual Machines
-→ soc-target-vm
+→ Target VM
 → Run command
 → RunPowerShellScript
 ```
@@ -216,38 +186,38 @@ net use \\127.0.0.1\IPC$ /user:administrator wrongpassword
 }
 ```
 
-This command generates multiple **Windows failed login events (EventID 4625)**.
+This generates Windows **Event ID 4625 failed login events**.
 
-Screenshot:
-
-```
-failed-login-simulation.png
-```
+![Failed Login Simulation](images/failed-login-simulation.png)
 
 ---
 
-## Troubleshooting & Key Observations
+# Troubleshooting & Key Observations
 
-During testing, the detection rule was successfully created and telemetry was confirmed in the SIEM. However, alerts and incidents were not generated during the testing window.
+During testing, simulated authentication failures were successfully generated and visible in the Log Analytics workspace.
 
-Several observations were made during troubleshooting.
+However, **Microsoft Sentinel did not generate alerts or incidents during the testing window**.
 
-### Failed Login Events Were Generated
+The following troubleshooting steps were performed.
 
-The simulated authentication failures produced the expected Windows security errors:
+---
+
+## Failed Login Events Were Generated
+
+The simulation script produced the expected authentication errors:
 
 ```
 System error 1326 has occurred.
 The user name or password is incorrect.
 ```
 
-These events are logged as **EventID 4625** in the Windows Security log.
+These events correspond to **Windows Security EventID 4625**.
 
 ---
 
-### Security Logs Were Successfully Ingested
+## Logs Were Verified in Sentinel
 
-Running KQL queries inside the Log Analytics workspace confirmed that failed login events were present.
+Manual KQL queries confirmed that failed login events were present in the workspace.
 
 Example validation query:
 
@@ -257,60 +227,55 @@ SecurityEvent
 | sort by TimeGenerated desc
 ```
 
-This verified that telemetry from the virtual machine was successfully reaching Microsoft Sentinel.
+This confirmed that **security telemetry from the VM was successfully ingested**.
 
 ---
 
-### Detection Rule Configuration Was Verified
+## Detection Rule Configuration Verified
 
-The following rule configuration settings were validated:
+The analytics rule configuration was reviewed and validated:
 
 * Rule Status: Enabled
-* Query Schedule: 5 minutes
+* Query Frequency: 5 minutes
 * Lookup Window: 5 minutes
 * Incident Creation: Enabled
 * Alert Threshold: Results greater than 0
 
-The rule logic returned expected results when tested manually.
+Despite these settings, the rule did not generate alerts during the testing window.
 
 ---
 
-### Possible Causes for Missing Alerts
+## Possible Causes
 
-Several factors may explain why alerts were not generated during testing:
+Possible explanations for the missing alerts include:
 
-1. **Low telemetry volume** in a single VM lab environment.
-2. **Scheduled analytics rules execute periodically**, not immediately.
-3. Event timing may not have aligned with the rule's query window.
-4. Microsoft Sentinel may delay rule run visibility in the **Rule Runs preview panel**.
-
-This behavior is not uncommon when testing SIEM rules in small environments with limited event volume.
+* Low telemetry volume in a single-VM lab environment
+* Scheduled rules executing outside the event generation window
+* Backend processing delays within Microsoft Sentinel
+* Incident management functionality migrating to the Microsoft Defender portal
 
 ---
 
-## Key Skills Demonstrated
+# Key Skills Demonstrated
 
-This lab demonstrates practical **Detection Engineering** concepts used by SOC teams.
-
-Skills practiced include:
-
-* Writing detection logic using KQL
-* Creating custom analytics rules in Microsoft Sentinel
-* Simulating attacker authentication attempts
-* Validating security telemetry in a SIEM
-* Troubleshooting detection rule behavior
+* Detection Engineering
+* KQL Query Development
+* SIEM Rule Creation
+* Authentication Log Analysis
+* Security Telemetry Validation
+* Troubleshooting SIEM Detections
 
 ---
 
-## Conclusion
+# Conclusion
 
-This lab demonstrates the workflow used by SOC analysts to design and test detection rules in a SIEM environment.
+This lab demonstrates the workflow used by SOC analysts to design and test detection rules in a SIEM platform.
 
 Although alerts were not triggered during the testing window, the lab successfully demonstrated:
 
-* Detection rule creation
-* Security log analysis
-* Threat simulation
-* SIEM troubleshooting
+* Custom detection rule creation
+* Failed login simulation
+* Security event log analysis
+* SIEM troubleshooting and validation
 
-These activities represent the foundational processes used when developing and validating detection logic in real-world security operations environments.
+These activities represent real-world processes used when building and validating detection logic in security operations environments.
