@@ -266,6 +266,42 @@ Possible explanations for the missing alerts include:
 * Troubleshooting SIEM Detections
 
 ---
+---
+
+# Detection Rule Best Practices
+
+## Threshold Tuning
+
+**Current threshold**: 5 failed attempts in 5 minutes
+
+**Considerations for production**:
+- Adjust based on environment baseline
+- Lower threshold for privileged accounts
+- Add exclusions for known service accounts
+- Consider time-of-day patterns
+
+## False Positive Reduction
+
+* Exclude known admin IP ranges
+* Filter out expected maintenance windows
+* Correlate with asset inventory
+* Track service account behavior
+
+---
+
+# Cost Management
+
+**Detection rule costs**:
+* Log ingestion: Included in Log Analytics pricing
+* Query execution: Free (runs every 5 minutes)
+* Alert storage: Minimal (<1MB per alert)
+
+**Optimization**:
+* Tune query frequency based on criticality
+* Use efficient KQL queries
+* Archive old incidents periodically
+
+---
 
 # Conclusion
 
@@ -279,3 +315,12 @@ Although alerts were not triggered during the testing window, the lab successful
 * SIEM troubleshooting and validation
 
 These activities represent real-world processes used when building and validating detection logic in security operations environments.
+
+---
+
+# References
+
+* [Microsoft Sentinel Analytics Rules](https://learn.microsoft.com/en-us/azure/sentinel/detect-threats-built-in)
+* [KQL Best Practices](https://learn.microsoft.com/en-us/azure/data-explorer/kusto/query/best-practices)
+* [Detection Engineering Guide](https://www.splunk.com/en_us/blog/security/detection-engineering-maturity-matrix.html)
+* [Sigma Rules Repository](https://github.com/SigmaHQ/sigma)

@@ -153,3 +153,49 @@ This information helps analysts pivot between related events during an investiga
 This lab demonstrates the core workflow of a SOC analyst investigating authentication activity using Microsoft Sentinel. By analyzing Windows security logs and querying authentication events, suspicious login activity can be identified and investigated.
 
 Although no automated incidents were generated during this exercise, the investigation process illustrates how SIEM platforms enable analysts to monitor, analyze, and respond to potential security threats within monitored environments.
+
+---
+
+# Skills Demonstrated
+
+* Security event log analysis with KQL
+* Threat hunting methodologies
+* Incident investigation workflow
+* Entity relationship analysis
+* Timeline reconstruction
+* Authentication pattern analysis
+* SOC analyst decision-making
+
+---
+
+# MITRE ATT&CK Mapping
+
+| Technique | Investigation Activity |
+| --------- | --------------------- |
+| T1110.001 | Brute Force: Password Guessing - Analyzed Event ID 4625 |
+| T1110.003 | Brute Force: Password Spraying - Pattern analysis |
+| T1078 | Valid Accounts - Correlated successful/failed logins |
+| T1021.001 | Remote Services: RDP - Investigated RDP authentication |
+
+---
+
+# Cost Management
+
+**Investigation activities**: No additional cost
+
+**Query execution**: Free (KQL queries don't incur charges)
+
+**Best practices**:
+- Use time filters to reduce data scanned
+- Limit result sets with `take` operator
+- Archive old incidents to reduce storage costs
+
+---
+
+# References
+
+* [Microsoft Sentinel Incident Investigation](https://learn.microsoft.com/en-us/azure/sentinel/investigate-cases)
+* [KQL Tutorial](https://learn.microsoft.com/en-us/azure/data-explorer/kusto/query/tutorial)
+* [Windows Security Event Logs](https://learn.microsoft.com/en-us/windows/security/threat-protection/auditing/security-auditing-overview)
+* [MITRE ATT&CK Framework](https://attack.mitre.org/)
+* [SOC Investigation Best Practices](https://www.sans.org/white-papers/)

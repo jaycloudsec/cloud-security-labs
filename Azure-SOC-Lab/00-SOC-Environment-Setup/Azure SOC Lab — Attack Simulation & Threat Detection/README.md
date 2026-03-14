@@ -134,3 +134,12 @@ Security Monitoring
 # Cost Management
 
 To prevent unnecessary Azure charges, the virtual machine used during the lab was stopped after completing the testing phase. The environment can be restarted later from the Azure portal if additional testing is required.
+
+---
+
+# References
+
+* [Microsoft Sentinel Analytics Rules](https://learn.microsoft.com/en-us/azure/sentinel/detect-threats-built-in)
+* [KQL Tutorial](https://learn.microsoft.com/en-us/azure/data-explorer/kusto/query/tutorial)
+* [Scheduled Query Rules](https://learn.microsoft.com/en-us/azure/sentinel/detect-threats-custom)
+* [MITRE ATT&CK: Brute Force](https://attack.mitre.org/techniques/T1110/)

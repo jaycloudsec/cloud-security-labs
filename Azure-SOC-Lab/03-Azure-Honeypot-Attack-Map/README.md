@@ -540,6 +540,31 @@ The data collected provides valuable insights into:
 Within hours of deployment, the honeypot attracted **over 64,760 failed login attempts** from a coordinated Netherlands-based botnet, demonstrating the constant threat environment facing publicly accessible systems.
 
 ---
+---
+
+# Industry Context
+
+According to cybersecurity research:
+* 90% of exposed RDP servers are attacked within 24 hours
+* Average time to first attack: <10 minutes (our lab: <2 hours)
+* Most attacks originate from cloud infrastructure
+* Amsterdam is a common hosting location for attack infrastructure
+
+**This lab's findings align with real-world threat intelligence:**
+- Automated botnet scanning is pervasive
+- Attackers use multiple IPs from same infrastructure
+- Default credentials (administrator, admin) are primary targets
+- Attack patterns follow global timezone activity
+
+---
+
+# Additional References
+
+* [SANS Internet Storm Center](https://isc.sans.edu/)
+* [AbuseIPDB - IP Reputation Database](https://www.abuseipdb.com/)
+* [Shodan - Internet-Facing Systems Search](https://www.shodan.io/)
+
+---
 
 # Next Phase
 

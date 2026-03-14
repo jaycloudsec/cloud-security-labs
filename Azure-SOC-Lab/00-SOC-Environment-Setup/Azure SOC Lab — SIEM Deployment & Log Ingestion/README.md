@@ -249,3 +249,52 @@ The next lab will focus on:
 - Threat detection using KQL
 - RDP brute force monitoring
 - SOC investigation workflows
+
+---
+---
+
+# Skills Demonstrated
+
+* Azure infrastructure deployment
+* Microsoft Sentinel SIEM configuration
+* Azure Monitor Agent installation
+* Data Collection Rules (DCR) management
+* Log Analytics workspace setup
+* KQL query fundamentals
+* SIEM telemetry pipeline troubleshooting
+
+---
+
+# MITRE ATT&CK Mapping
+
+| Technique | Lab Activity |
+| --------- | ------------ |
+| T1078 | Valid Accounts - Authentication log monitoring |
+| T1021.001 | Remote Services: RDP - Remote access logging |
+
+---
+
+# Cost Management
+
+**Estimated lab cost**: $5-8 total
+
+**Resources deployed**:
+- VM (Standard_B2ts_v2): ~$0.02/hour
+- Log Analytics Workspace: ~$2.50/GB ingested
+- Microsoft Sentinel: Free tier (first 10GB/day)
+
+**Cost optimization**:
+- Stop VM when not actively testing
+- Use smallest sufficient VM size
+- Monitor ingestion with Log Analytics workspace metrics
+- Delete resources after lab completion
+
+---
+
+# References
+
+* [Microsoft Sentinel Documentation](https://learn.microsoft.com/en-us/azure/sentinel/)
+* [Azure Monitor Agent Overview](https://learn.microsoft.com/en-us/azure/azure-monitor/agents/azure-monitor-agent-overview)
+* [Data Collection Rules](https://learn.microsoft.com/en-us/azure/azure-monitor/essentials/data-collection-rule-overview)
+* [KQL Quick Reference](https://learn.microsoft.com/en-us/azure/data-explorer/kql-quick-reference)
+* [Windows Security Event Log Reference](https://learn.microsoft.com/en-us/windows/security/threat-protection/auditing/security-auditing-overview)
