@@ -173,7 +173,6 @@ for ($i=0; $i -lt 15; $i++) {
 ---
 
 ## Production Validation with Real Attacks
-## Production Validation with Real Attacks
 
 The honeypot VM was left running overnight to collect real-world attack data and verify the automation responds to genuine threats.
 
