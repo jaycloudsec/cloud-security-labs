@@ -3,6 +3,7 @@
 ## Overview
 
 This lab focuses on **Detection Engineering using Microsoft Sentinel**.
+
 The goal is to create a **custom analytics rule** that detects suspicious authentication behavior using Windows security logs collected from a monitored virtual machine.
 
 In this scenario, a rule was created to detect **multiple failed login attempts**, which is a common indicator of **brute-force authentication attempts**.
@@ -47,9 +48,9 @@ SecurityEvent
 
 ---
 
-# Lab Walkthrough
+# Detection Rule Configuration
 
-## Step 1 — Open Analytics Rules
+The analytics rule was configured in Microsoft Sentinel to automatically detect potential brute force attacks.
 
 Navigate to:
 
@@ -57,57 +58,17 @@ Navigate to:
 Azure Portal
 → Microsoft Sentinel
 → Analytics
+→ Create → Scheduled Query Rule
 ```
 
-Create a new **Scheduled Query Rule**.
+## Rule Settings
 
-![Create Analytics Rule](screenshots/analytics-rule-creation.png)
+**Rule Details**:
+- Name: `Multiple Failed Login Detection`
+- Severity: Medium
+- MITRE ATT&CK Tactic: Credential Access
 
----
-
-## Step 2 — Configure Rule Settings
-
-Select:
-
-```
-Create → Scheduled Query Rule
-```
-
-This allows custom detections using KQL queries.
-
-![Analytics Rule Configuration](screenshots/analytics-rule-configuration.png)
-
----
-
-## Step 3 — Configure Rule Details
-
-Example configuration used:
-
-**Rule Name**
-
-```
-Multiple Failed Login Detection
-```
-
-**Severity**
-
-```
-Medium
-```
-
-**MITRE ATT&CK Tactic**
-
-```
-Credential Access
-```
-
-![Analytics Rule Details](screenshots/analytics-rule-details.png)
-
----
-
-## Step 4 — Define Detection Logic
-
-Detection logic identifies accounts with multiple failed authentication attempts.
+**Detection Logic**:
 
 ```kql
 SecurityEvent
@@ -117,58 +78,30 @@ SecurityEvent
 | sort by FailedAttempts desc
 ```
 
-Rule execution configuration:
+**Execution Schedule**:
+- Run query every: 5 minutes
+- Lookup data from last: 5 minutes
+- Alert threshold: Results greater than 0
 
-```
-Run query every: 5 minutes
-Lookup data from last: 5 minutes
-Alert threshold: results greater than 0
-```
+**Incident Settings**:
+- Create incidents from alerts: Enabled
+- Alert grouping: Disabled
 
-![Analytics Rule Logic](screenshots/analytics-rule-logic.png)
+![Analytics Rule Configuration](screenshots/analytics-rule-logic.png)
 
----
+Once created, the rule continuously monitors incoming log data and triggers alerts when suspicious activity is identified.
 
-## Step 5 — Configure Incident Settings
-
-Enable incident creation when alerts are generated.
-
-Configuration:
-
-```
-Create incidents from alerts triggered by this rule: Enabled
-Alert grouping: Disabled
-```
-
-![Incident Settings](screenshots/incident-settings.png)
+![Active Detection Rule](screenshots/sentinel-active-detection-rule.png)
 
 ---
 
-## Step 6 — Automated Response
+# Attack Simulation
 
-Automation playbooks were **not configured in this lab**.
+Failed authentication attempts were simulated using **Run Command** inside the Azure VM.
 
-Playbooks will be implemented in the **Automated SOC Response Lab**.
+Since RDP and SSH access were not used in this lab, this approach allowed testing without remote access.
 
-![Automated Response](screenshots/automated-response.png)
-
----
-
-## Step 7 — Review and Create Rule
-
-Review the configuration and create the analytics rule.
-
-Once created, the rule begins running according to its configured schedule.
-
-![Analytics Rule Review](screenshots/analytics-rule-review.png)
-
----
-
-## Step 8 — Simulate Failed Login Attempts
-
-Since RDP and SSH access were not used in this lab, failed authentication attempts were simulated using **Run Command inside the Azure VM**.
-
-Location:
+Navigate to:
 
 ```
 Azure Portal
@@ -182,11 +115,11 @@ PowerShell script used:
 
 ```powershell
 for ($i=0; $i -lt 10; $i++) {
-net use \\127.0.0.1\IPC$ /user:administrator wrongpassword
+    net use \\127.0.0.1\IPC$ /user:administrator wrongpassword
 }
 ```
 
-This generates Windows **Event ID 4625 failed login events**.
+This generates Windows **Event ID 4625** (failed login events).
 
 ![Failed Login Simulation](screenshots/failed-login-simulation.png)
 
@@ -198,9 +131,7 @@ During testing, simulated authentication failures were successfully generated an
 
 However, **Microsoft Sentinel did not generate alerts or incidents during the testing window**.
 
-The following troubleshooting steps were performed.
-
----
+The following troubleshooting steps were performed:
 
 ## Failed Login Events Were Generated
 
@@ -211,7 +142,7 @@ System error 1326 has occurred.
 The user name or password is incorrect.
 ```
 
-These events correspond to **Windows Security EventID 4625**.
+These events correspond to **Windows Security Event ID 4625**.
 
 ---
 
@@ -219,7 +150,7 @@ These events correspond to **Windows Security EventID 4625**.
 
 Manual KQL queries confirmed that failed login events were present in the workspace.
 
-Example validation query:
+Validation query:
 
 ```kql
 SecurityEvent
@@ -256,18 +187,6 @@ Possible explanations for the missing alerts include:
 
 ---
 
-# Key Skills Demonstrated
-
-* Detection Engineering
-* KQL Query Development
-* SIEM Rule Creation
-* Authentication Log Analysis
-* Security Telemetry Validation
-* Troubleshooting SIEM Detections
-
----
----
-
 # Detection Rule Best Practices
 
 ## Threshold Tuning
@@ -286,6 +205,17 @@ Possible explanations for the missing alerts include:
 * Filter out expected maintenance windows
 * Correlate with asset inventory
 * Track service account behavior
+
+---
+
+# Key Skills Demonstrated
+
+* Detection Engineering
+* KQL Query Development
+* SIEM Rule Creation
+* Authentication Log Analysis
+* Security Telemetry Validation
+* Troubleshooting SIEM Detections
 
 ---
 
