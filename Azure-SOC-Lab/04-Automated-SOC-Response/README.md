@@ -6,13 +6,7 @@ This lab focuses on **implementing automated incident response** using Microsoft
 
 The objective is to create security automation workflows that respond to alerts automatically, reducing manual investigation time and enabling faster threat containment.
 
-This project demonstrates:
-
-* Security Orchestration, Automation, and Response (SOAR)
-* Azure Logic Apps for security automation
-* Automated alert notification
-* Incident response workflows
-* Integration between Sentinel and external services
+The implemented playbook automatically sends email notifications when failed login incidents are detected on the honeypot environment.
 
 ---
 
@@ -31,9 +25,7 @@ Logic App Playbook
       │
       ├──▶ Extract Incident Data
       │
-      ├──▶ Send Email Notification
-      │
-      └──▶ [Future: Update Sentinel Incident]
+      └──▶ Send Email Notification
 ```
 
 ---
@@ -45,185 +37,76 @@ Logic App Playbook
 * Azure Logic Apps
 * Microsoft Entra ID (Managed Identity)
 * Azure Role-Based Access Control (RBAC)
-* Kusto Query Language (KQL)
 * Email (Outlook.com connector)
 
 ---
 
-## Automation Use Cases
+## Playbook Components
 
-Common SOC automation scenarios:
+### Logic App Configuration
 
-* **Alert Notification**: Send alerts to SOC team via email, Teams, or Slack
-* **Incident Enrichment**: Query threat intelligence APIs for context
-* **Ticketing**: Automatically create incidents in ServiceNow or Jira
-* **Containment**: Block malicious IPs in Network Security Groups
-* **Investigation**: Collect additional context from logs and endpoints
-
-This lab implements **automated email notification** for failed login incidents detected on the honeypot environment.
-
----
-
-# Lab Walkthrough
-
-## Step 1 — Create Logic App Playbook
-
-Navigate to:
-
-```
-Azure Portal
-→ Logic Apps
-→ Create
-```
-
-Configuration:
-
-**Basics:**
-- **Resource Group**: `soc-lab-rg`
-- **Logic App name**: `Enrich-Failed-Login-Alert`
-- **Region**: Australia East
-- **Plan type**: Consumption (pay-per-execution)
-- **Zone redundancy**: Disabled
-
-Click **Review + Create** → **Create**
-
-Wait for deployment (~30 seconds).
+**Logic App Name**: `Enrich-Failed-Login-Alert`  
+**Region**: Australia East  
+**Plan Type**: Consumption (pay-per-execution)  
+**Workflow Type**: Stateful
 
 ![Logic App Creation](screenshots/logic-app-creation.png)
 
 ---
 
-## Step 2 — Configure Sentinel Trigger
+### Trigger: Sentinel Incident
 
-Open the Logic App Designer:
+The playbook triggers automatically when an incident is created in Microsoft Sentinel.
 
-```
-Logic App
-→ Workflows
-→ Select workflow
-→ Designer
-```
+**Trigger**: "When Azure Sentinel incident creation rule was triggered"
 
-Add trigger:
-
-```
-Click "Add a trigger"
-→ Search: "Microsoft Sentinel"
-→ Select: "Microsoft Sentinel incident"
-→ Choose trigger: "When Azure Sentinel incident creation rule was triggered"
-```
-
-Authorize the connection:
-- Click **Sign in**
-- Use Azure account credentials
-- Click **Allow**
-
-The trigger is now configured to activate whenever an incident is created in Sentinel.
+This provides access to incident data including:
+- Incident number
+- Incident title
+- Severity
+- Description
+- Incident URL
 
 ![Playbook Trigger Configuration](screenshots/playbook-trigger-configuration.png)
 
 ---
 
-## Step 3 — Add Email Notification Action
+### Action: Email Notification
 
-Add action to send email when playbook runs:
+Automated email notification sent to security team with incident details.
 
-```
-Click "+" button below trigger
-→ Search: "send email"
-→ Select: "Outlook.com"
-→ Choose: "Send an email (V2)"
-```
+**Email connector**: Outlook.com  
+**Subject**: 🚨 ALERT: Failed Login Detected on Honeypot
 
-Authorize Outlook connection:
-- Sign in with Microsoft account
-- Allow access
+**Body content includes**:
+- Incident ID
+- Incident Title
+- Severity
+- Description
+- Direct link to view in Sentinel
 
-Configure email fields:
-
-**To**: `[your-email@example.com]`
-
-**Subject**:
-```
-🚨 ALERT: Failed Login Detected on Honeypot
-```
-
-**Body**:
-
-Insert dynamic content from the Sentinel incident using the lightning bolt icon:
-
-```
-Security Alert Detected
-
-Incident Details:
--------------------
-Incident ID: [Merged Incident Number]
-Incident Title: [Incident Title]
-Severity: [Incident Severity]
-
-Description:
-[Incident Description]
-
-View in Sentinel:
-[Incident URL]
-
----
-Automated alert from SOC playbook
-```
-
-Dynamic content fields are inserted as blue tags that automatically populate with incident data.
-
-Click **Save** to save the playbook.
+Dynamic content is automatically populated from the incident trigger.
 
 ![Email Notification Action](screenshots/email-notification-action.png)
 
 ---
 
-## Step 4 — Enable Managed Identity
+## Managed Identity & Permissions
 
-The Logic App requires permissions to interact with Microsoft Sentinel.
+### System-Assigned Managed Identity
 
-Navigate to:
+The Logic App uses a system-assigned managed identity for secure authentication to Microsoft Sentinel.
 
-```
-Logic App
-→ Identity
-→ System assigned
-```
+**Configuration**:
+- Managed identity enabled
+- Registered with Microsoft Entra ID
+- No credentials stored in code
 
-Enable managed identity:
+### RBAC Role Assignment
 
-- Toggle **Status** to **On**
-- Click **Save**
-- Confirm by clicking **Yes**
-
-Wait for confirmation. An **Object (principal) ID** will appear.
-
-This creates a system-assigned managed identity for the Logic App.
-
----
-
-## Step 5 — Grant Sentinel Permissions
-
-Grant the Logic App permission to access Sentinel incidents:
-
-```
-Logic App
-→ Identity
-→ Azure role assignments
-→ Add role assignment
-```
-
-Configure role:
-
-- **Scope**: Resource group
-- **Subscription**: Azure subscription 1
-- **Resource group**: `soc-lab-rg`
-- **Role**: `Microsoft Sentinel Responder`
-
-Click **Save**.
-
-This grants the Logic App permission to:
+**Role**: Microsoft Sentinel Responder  
+**Scope**: Resource group (soc-lab-rg)  
+**Permissions**:
 - Read Sentinel incidents
 - Update incident properties
 - Add comments to incidents
@@ -232,77 +115,34 @@ This grants the Logic App permission to:
 
 ---
 
-## Step 6 — Create Automation Rule in Sentinel
+## Automation Rule Configuration
 
-Navigate to:
+The automation rule defines when the playbook executes.
 
-```
-Azure Portal
-→ Microsoft Sentinel
-→ soc-law workspace
-→ Automation
-```
+**Rule Name**: `Auto-Enrich-Failed-Login-Alerts`
 
-**Note**: The Automation page may redirect to the Microsoft Defender portal, as Sentinel is being integrated into the unified security platform.
-
-Create automation rule:
-
-```
-Click "+ Create"
-→ Select "Automation rule"
-```
-
-Configure automation rule:
-
-**Automation rule name**:
-```
-Auto-Enrich-Failed-Login-Alerts
-```
-
-**Trigger**:
-```
-When incident is created
-```
+**Trigger**: When incident is created
 
 **Conditions**:
+- Property: Analytic rule name
+- Operator: Contains
+- Value: Both detection rules selected:
+  - `[HONEYPOT] Brute Force Login Detection`
+  - `[HONEYPOT] Multiple Failed Login Detection`
 
-Add condition to filter incidents:
-
-```
-Property: Analytic rule name
-Operator: Contains
-Value: [HONEYPOT] Brute Force Login Detection
-```
-
-**Additional condition** (to match both detection rules):
-
-Select both analytics rules:
-- `[HONEYPOT] Brute Force Login Detection`
-- `[HONEYPOT] Multiple Failed Login Detection`
-
-**Actions**:
-
-```
-Click "Add action"
-→ Select "Run playbook"
-→ Choose "Enrich-Failed-Login-Alert"
-```
+**Actions**: Run playbook → Enrich-Failed-Login-Alert
 
 **Rule expiration**: Indefinite
-
-**Order**: 1
-
-Click **Apply** to create the automation rule.
 
 ![Automation Rule Configuration](screenshots/automation-rule-configuration.png)
 
 ---
 
-## Step 7 — Test the Automation
+## Testing & Validation
 
 ### Internal Testing
 
-To verify the automation workflow, failed login attempts were simulated using Azure VM Run Command:
+Failed login attempts were simulated using Azure VM Run Command:
 
 ```powershell
 for ($i=0; $i -lt 15; $i++) {
@@ -310,39 +150,21 @@ for ($i=0; $i -lt 15; $i++) {
 }
 ```
 
-This generates Windows Event ID 4625 (failed authentication) logs.
+**Test timeline**:
+- Simulation executed successfully
+- Logs ingested within 5-10 minutes
+- Detection rule fired at scheduled interval
+- Incident created (ID 30)
+- Automation rule triggered immediately
+- Playbook executed successfully
+- Email delivered within 1-2 minutes
 
-### Test Timeline
+**Initial test issue**:
+- First test (Incident ID 29) did not trigger automation
+- Root cause: Condition value only matched one detection rule
+- Resolution: Updated automation rule to match both detection rules
 
-- **Simulation executed**: Run Command completed successfully
-- **Log ingestion**: 5-10 minutes for logs to appear in Log Analytics
-- **Detection rule evaluation**: Every 5 minutes (based on rule configuration)
-- **Incident creation**: ~10-15 minutes after simulation
-- **Playbook execution**: Triggered immediately upon incident creation
-- **Email delivery**: Received within 1-2 minutes
-
-### Test Results
-
-**Initial test (Incident ID 29)**:
-- Incident created successfully
-- Automation rule did **not** trigger
-- **Root cause**: Condition value mismatch
-
-**Issue identified**:
-The automation rule condition was set to match only one detection rule name, but the test incident was created by a different rule.
-
-**Resolution**:
-Updated automation rule to select **both** detection rules:
-- `[HONEYPOT] Brute Force Login Detection`
-- `[HONEYPOT] Multiple Failed Login Detection`
-
-**Second test (Incident ID 30)**:
-- ✅ Incident created successfully
-- ✅ Automation rule triggered
-- ✅ Logic App playbook executed
-- ✅ Email notification received (delivered to spam folder initially)
-
-The automation workflow is now **fully functional**.
+**Second test result**: ✅ Full automation workflow successful
 
 ![Playbook Run History](screenshots/playbook-run-history.png)
 
@@ -350,7 +172,7 @@ The automation workflow is now **fully functional**.
 
 ---
 
-## Step 8 — Production Validation with Real Attacks
+## Production Validation with Real Attacks
 
 [TO BE UPDATED AFTER OVERNIGHT HONEYPOT RUN]
 
@@ -384,55 +206,31 @@ The honeypot VM was left running to collect real-world attack data and verify th
 
 - Automation successfully detected and responded to real attacks
 - Email notifications delivered promptly
-- No false positives or missed detections
 - Playbook execution was consistent and reliable
 
-[SCREENSHOTS TO BE ADDED:
-- Real incident from attack
-- Email from real attack
-- Multiple playbook runs showing consistent execution]
+[SCREENSHOTS TO BE ADDED]
 
 ---
 
 # Troubleshooting & Key Observations
 
-### Automation Rule Not Triggering
+### Automation Rule Condition Mismatch
 
-**Issue**: Playbook did not execute despite incident being created.
+**Issue**: Playbook did not execute despite incident being created (Incident ID 29).
 
-**Cause**: Automation rule condition did not match the incident's analytics rule name.
+**Cause**: Automation rule condition matched only one analytics rule name, but the test incident was created by a different rule.
 
-**Solution**: 
-- Verified condition in automation rule matched actual analytics rule names
-- Selected multiple analytics rules to ensure coverage
-- Tested with manual incident generation
+**Solution**: Updated automation rule to select both detection rules instead of using a single "Contains" filter.
 
-**Lesson**: Always verify condition values match exactly, especially when rules are renamed or tagged.
+**Lesson**: Verify condition values match all expected analytics rules, especially when multiple rules can generate similar incidents.
 
 ---
 
 ### Email Delivered to Spam Folder
 
-**Observation**: Automated emails from Logic App were initially flagged as spam.
+**Observation**: Automated emails from Logic App were initially flagged as spam by email provider.
 
-**Solution**: 
-- Added sender to safe senders list
-- Email continued to arrive successfully
-- Production environments should use authenticated email services (Office 365, SendGrid)
-
-**Note**: This is expected behavior for personal email accounts receiving automated alerts.
-
----
-
-### Managed Identity Permission Errors
-
-**Issue**: Initial playbook runs may fail with permission errors if managed identity is not properly configured.
-
-**Solution**:
-- Enable system-assigned managed identity on Logic App
-- Grant "Microsoft Sentinel Responder" role at resource group scope
-- Wait 1-2 minutes for permissions to propagate
-- Retry playbook execution
+**Solution**: Added sender to safe senders list. Production environments should use authenticated email services (Office 365, SendGrid).
 
 ---
 
@@ -445,20 +243,16 @@ The honeypot VM was left running to collect real-world attack data and verify th
 - Automation rules may redirect to Defender portal
 - Core functionality remains the same
 
-**Note**: Screenshots in this lab reflect both Azure Portal (Sentinel) and Defender portal interfaces as the migration was in progress during lab completion.
-
 ---
 
 # Skills Demonstrated
 
 * Security Orchestration, Automation, and Response (SOAR)
-* Azure Logic Apps development
-* Workflow automation design
+* Azure Logic Apps workflow development
 * Incident response automation
 * Microsoft Sentinel integration
 * Managed identity configuration
 * Azure RBAC (Role-Based Access Control)
-* Email notification systems
 * Conditional logic in automation rules
 * Troubleshooting automation workflows
 
@@ -476,18 +270,14 @@ The honeypot VM was left running to collect real-world attack data and verify th
 
 # Cost Management
 
-Automation costs:
+**Logic App cost**: ~$0.0001 per execution (2 actions)
 
-* **Logic App Executions**: Charged per action (~$0.000025 per action)
-* **Typical cost per execution**: ~$0.0001 (2 actions: trigger + email)
-* **Estimated monthly cost**: <$1 for typical SOC alert volume
+**Estimated monthly cost**: <$1 for typical SOC alert volume
 
 Cost optimization:
-
-* Use consumption plan for low-volume automation
-* Implement throttling to prevent runaway executions
-* Monitor execution counts in Logic App metrics
-* Set budget alerts in Azure Cost Management
+- Use consumption plan for low-volume automation
+- Monitor execution counts in Logic App metrics
+- Set budget alerts in Azure Cost Management
 
 ---
 
@@ -499,7 +289,6 @@ This lab demonstrates how security automation can:
 * Eliminate manual repetitive tasks
 * Ensure consistent incident handling
 * Enable 24/7 automated response
-* Free analysts to focus on complex investigations
 
 The implemented playbook successfully:
 - ✅ Triggers automatically on incident creation
@@ -515,51 +304,11 @@ Automation playbooks are essential components of modern SOC operations, enabling
 
 Recommended automation enhancements:
 
-* **Threat Intelligence Integration**: Query VirusTotal or AbuseIPDB for IP reputation
-* **Incident Enrichment**: Add geolocation data and threat intelligence to incidents
-* **Multi-channel Notifications**: Add Microsoft Teams or Slack alerts
-* **Automated Containment**: Block malicious IPs in Network Security Groups
-* **Escalation Workflows**: Assign high-severity incidents to on-call analysts
-* **ServiceNow Integration**: Auto-create tickets for incident tracking
-
----
-
-# Alternative Implementations
-
-## Advanced Notification Example
-
-```
-Body with additional enrichment:
-- Attacker IP with geolocation
-- Historical attack count from this IP
-- Threat intelligence score
-- Recommended response actions
-```
-
-## Conditional Response Example
-
-```
-If Severity = "High":
-  → Send to security team + manager
-  → Create urgent ticket
-  → Block IP automatically
-
-If Severity = "Medium":
-  → Send to security team
-  → Create standard ticket
-
-If Severity = "Low":
-  → Log only, no notification
-```
-
-## Multi-Playbook Architecture
-
-```
-Playbook 1: Notification (all incidents)
-Playbook 2: IP enrichment (credential access incidents)
-Playbook 3: Auto-containment (high severity only)
-Playbook 4: Ticket creation (all incidents)
-```
+* Threat intelligence integration (VirusTotal, AbuseIPDB)
+* Multi-channel notifications (Microsoft Teams, Slack)
+* Automated containment (block malicious IPs in NSG)
+* Incident enrichment with geolocation data
+* ServiceNow integration for ticket creation
 
 ---
 
@@ -568,3 +317,4 @@ Playbook 4: Ticket creation (all incidents)
 * [Microsoft Sentinel Playbooks Documentation](https://learn.microsoft.com/en-us/azure/sentinel/automate-responses-with-playbooks)
 * [Azure Logic Apps Overview](https://learn.microsoft.com/en-us/azure/logic-apps/logic-apps-overview)
 * [Managed Identities for Azure Resources](https://learn.microsoft.com/en-us/azure/active-directory/managed-identities-azure-resources/overview)
+* [Azure RBAC Documentation](https://learn.microsoft.com/en-us/azure/role-based-access-control/overview)
